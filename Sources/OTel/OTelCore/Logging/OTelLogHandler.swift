@@ -84,15 +84,30 @@ struct OTelLogHandler: Sendable, LogHandler {
             effectiveMetadata = codeMetadata
         }
 
+        // swift-log has no concept of the OTLP log record `event_name` field. Allow callers to set it
+        // via a reserved metadata key, which we lift into the record's `eventName` and strip from the
+        // attributes so it is not also emitted as a duplicate attribute. Grafana Frontend Observability
+        // keys its session lifecycle on this field (e.g. `session.start`/`session.end`).
+        var recordMetadata = effectiveMetadata
+        var eventName: String?
+        if let value = recordMetadata.removeValue(forKey: OTelLogHandler.eventNameMetadataKey) {
+            eventName = value.description
+        }
+
         var record = OTelLogRecord(
             body: message,
             level: level,
-            metadata: effectiveMetadata,
+            metadata: recordMetadata,
             timeNanosecondsSinceEpoch: nanosecondsSinceEpoch(),
             resource: resource,
-            spanContext: ServiceContext.current?.spanContext
+            spanContext: ServiceContext.current?.spanContext,
+            eventName: eventName
         )
 
         processor.onEmit(&record)
     }
+
+    /// Reserved swift-log metadata key. When present, its value is lifted into the OTLP log record's
+    /// `event_name` field rather than emitted as an attribute. See `log(...)`.
+    static let eventNameMetadataKey = "otel.event.name"
 }

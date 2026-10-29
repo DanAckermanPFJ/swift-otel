@@ -394,6 +394,11 @@ package struct Opentelemetry_Proto_Logs_V1_LogRecord: Sendable {
   ///   - the field contains an invalid value.
   package var spanID: Data = Data()
 
+  /// A unique identifier of event category/type. Used by Grafana Faro Frontend
+  /// Observability to recognize session lifecycle events (e.g. `session.start`/`session.end`).
+  /// OTLP field 12. [Optional]. (Added in fork: upstream generated proto predates this field.)
+  package var eventName: String = String()
+
   package var unknownFields = SwiftProtobuf.UnknownStorage()
 
   package init() {}
@@ -551,6 +556,7 @@ extension Opentelemetry_Proto_Logs_V1_LogRecord: SwiftProtobuf.Message, SwiftPro
       case 9: try { try decoder.decodeSingularBytesField(value: &self.traceID) }()
       case 10: try { try decoder.decodeSingularBytesField(value: &self.spanID) }()
       case 11: try { try decoder.decodeSingularFixed64Field(value: &self.observedTimeUnixNano) }()
+      case 12: try { try decoder.decodeSingularStringField(value: &self.eventName) }()
       default: break
       }
     }
@@ -591,6 +597,9 @@ extension Opentelemetry_Proto_Logs_V1_LogRecord: SwiftProtobuf.Message, SwiftPro
     if self.observedTimeUnixNano != 0 {
       try visitor.visitSingularFixed64Field(value: self.observedTimeUnixNano, fieldNumber: 11)
     }
+    if !self.eventName.isEmpty {
+      try visitor.visitSingularStringField(value: self.eventName, fieldNumber: 12)
+    }
     try unknownFields.traverse(visitor: &visitor)
   }
 
@@ -605,6 +614,7 @@ extension Opentelemetry_Proto_Logs_V1_LogRecord: SwiftProtobuf.Message, SwiftPro
     if lhs.flags != rhs.flags {return false}
     if lhs.traceID != rhs.traceID {return false}
     if lhs.spanID != rhs.spanID {return false}
+    if lhs.eventName != rhs.eventName {return false}
     if lhs.unknownFields != rhs.unknownFields {return false}
     return true
   }

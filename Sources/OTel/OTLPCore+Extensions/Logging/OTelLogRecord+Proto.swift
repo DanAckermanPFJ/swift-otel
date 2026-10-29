@@ -25,6 +25,10 @@ extension Opentelemetry_Proto_Logs_V1_LogRecord {
         severityNumber = .init(logRecord.level)
         severityText = String(describing: logRecord.level)
 
+        if let event = logRecord.eventName {
+            eventName = event
+        }
+
         body = .init(logRecord.body.description)
 
         attributes = .init(logRecord.metadata)

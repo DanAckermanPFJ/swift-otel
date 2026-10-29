@@ -18,6 +18,9 @@ struct OTelLogRecord: Equatable, Sendable {
     var level: Logger.Level
     var metadata: Logger.Metadata
     var timeNanosecondsSinceEpoch: UInt64
+    /// OTLP log record `event_name`. Set for session lifecycle events (e.g. `session.start`/`session.end`)
+    /// that Grafana Frontend Observability keys on. Lifted from a reserved metadata key by `OTelLogHandler`.
+    var eventName: String?
 
     let resource: OTelResource
     let spanContext: OTelSpanContext?
@@ -28,7 +31,8 @@ struct OTelLogRecord: Equatable, Sendable {
         metadata: Logger.Metadata,
         timeNanosecondsSinceEpoch: UInt64,
         resource: OTelResource,
-        spanContext: OTelSpanContext?
+        spanContext: OTelSpanContext?,
+        eventName: String? = nil
     ) {
         self.body = body
         self.level = level
@@ -36,5 +40,6 @@ struct OTelLogRecord: Equatable, Sendable {
         self.timeNanosecondsSinceEpoch = timeNanosecondsSinceEpoch
         self.resource = resource
         self.spanContext = spanContext
+        self.eventName = eventName
     }
 }
