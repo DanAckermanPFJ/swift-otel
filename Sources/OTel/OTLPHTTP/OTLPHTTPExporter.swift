@@ -114,7 +114,14 @@ final class OTLPHTTPExporter<Request: Message, Response: Message>: Sendable {
         case .some(let content):
             throw OTLPHTTPExporterError.responseHasUnsupportedContentType(content)
         case .none:
-            if response.status == .noContent {
+            // Faro/Grafana compatibility: Grafana's OTLP gateway (faro-collector) acknowledges a
+            // successful export with a 2xx status (observed: 202 Accepted), an empty body, and no
+            // Content-Type header. The OTLP/HTTP spec expects 200 + a Content-Type'd ExportServiceResponse
+            // body, so stock swift-otel throws `responseHasMissingContentType` here and reports every
+            // accepted batch as a failed export. Treat any 2xx response with an empty body as success
+            // (equivalent to an empty ExportServiceResponse) rather than an error. A non-empty body with
+            // no Content-Type is still treated as missing-content-type, since it cannot be decoded.
+            if response.status == .noContent || body.readableBytes == 0 {
                 Response()
             } else {
                 throw OTLPHTTPExporterError.responseHasMissingContentType
